@@ -9,10 +9,10 @@ class Disc extends MapSprite implements CollidableBody{
   num get radius => _radius;
   set radius(num value){
     _radius = value;
-    collisionProfile.width = collisionProfile.height = 2*value;   
+    collisionProfile..width = 2*value..height = 2*value;   
   }
   MapRect get boundingRect => collisionProfile;
-  
+  //String log = "";
   bool isColliding = false;
   
   Disc(){

@@ -17,8 +17,7 @@ class InertialBody{
   Vector2 position = new Vector2.zero();
   Vector2 velocity = new Vector2.zero();
   Vector2 force = new Vector2.zero();
-  
-  void update(dt){
+  void update(num dt){
     velocity.add(force.scale(dt/mass));
     position.add(velocity.scaled(dt));
     force.setZero();
@@ -49,6 +48,8 @@ class MapRect{
   num _halfHeight;
   num _halfWidth;
   Vector2 center;
+  
+  String toString()=>"t:$top, l:$left, b:$bottom, r:$right";
 }
 
 ///can be added to the quadtree
@@ -57,4 +58,5 @@ abstract class CollidableBody{
   void approach(CollidableBody other);
   MapRect get collisionProfile;
   Vector2 get position;
+  //String log;
 }

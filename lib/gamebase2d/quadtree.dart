@@ -1,7 +1,7 @@
 part of gamebase2d;
 
 class QuadtreeNode{
-static final int MAX_OBJECTS = 5;
+static final int MAX_OBJECTS = 6;
 static final int MIN_OBJECTS = 4;
 static final int MAX_LEVELS = 4;
 static List<List<QuadtreeNode>> nodeCache = new List<List<QuadtreeNode>>();
@@ -15,6 +15,9 @@ num midX, midY;
 List<CollidableBody> objects = new List<CollidableBody>();
 List<QuadtreeNode> nodes;
 QuadtreeNode parent;
+
+static int nodecount = 1;
+static int comparecount = 0;
 
 QuadtreeNode({this.top:0,this.left:0,this.bottom:0,this.right:0});
 
@@ -37,23 +40,48 @@ void checkCollisions([List<CollidableBody> higher]){
     for(CollidableBody body2 in higher){
       if(body2.isCollidable) notifyOfApproach(body1,body2); debug_highercount++;}
   }
-  if(debug_peercount >0 || debug_highercount > 0)
+  //if(debug_peercount >0 || debug_highercount > 0)
   //print("check lev:$level, peer:$debug_peercount, higher:$debug_highercount");
   //check objects in subnodes
   if(nodes != null){
     //add objects in this node to the objects of it's anscestors
-    higher.addAll(objects);
+    List<CollidableBody> toHere = 
+        new List<CollidableBody> (higher.length+objects.length);
+    toHere.setRange(0, higher.length, higher);
+    toHere.setRange(higher.length,toHere.length,objects);
     for(QuadtreeNode node in nodes)
-      node.checkCollisions(higher);
+      node.checkCollisions(toHere);
   }
+  num w = right-left;
+  num h = bottom-top;
+  num ar = 1 - 4*(w/2-40.0)*(h/2-40.0)/(w-40.0)/(h-40.0);
+  num nr = objects.length.toDouble()/childCount.toDouble();
+  
+  comparecount += debug_highercount+debug_peercount;
+  //if(!nr.isNaN && nodes != null)
+  //print("lev:$level, ar:$ar, nr:$nr");
+  //print("lev:$level hi:$debug_highercount =? ${higher.length*objects.length}");
 }
 
 String getAddress(CollidableBody obj){
   int index;
   if((index = objects.indexOf(obj))!=-1)
     return "ob"+index.toString();
-  index = getIndexOf(obj);
+  if(nodes == null || (index=getIndexOf(obj))==-1) return " not found ";
   return index.toString()+","+nodes[index].getAddress(obj);
+}
+String getCorrectAddress(CollidableBody obj){
+  int index = getIndexOf(obj);
+  if(nodes==null || index==-1) return "";
+  
+  return index.toString()+","+nodes[index].getCorrectAddress(obj);
+}
+bool isCorrect(CollidableBody obj){
+  int index;
+  if((index = objects.indexOf(obj))!=-1)
+    return true;
+  if(nodes == null || (index=getIndexOf(obj))==-1) return false;
+  return nodes[index].isCorrect(obj);
 }
 
 void notifyOfApproach(CollidableBody body1, CollidableBody body2){
@@ -62,8 +90,8 @@ void notifyOfApproach(CollidableBody body1, CollidableBody body2){
 }
 
 void split() {
-  midX = (right - left) / 2;
-  midY = (bottom - top) / 2;
+  midX = (right + left) / 2;
+  midY = (bottom + top) / 2;
   
   //check if there's a premade list of 4 nodes ready
   if(nodeCache.length == 0){
@@ -93,24 +121,28 @@ void split() {
       ..level = level+1
       ..childCount = 0;
   }
+  sift();
+  nodecount += 4;
+} //end split()
+
+void sift(){
   int index;
+  //push objects into lower nodes, if possible
   for(int i=objects.length-1;i>=0;i--){
     if((index = getIndexOf(objects[i]))!=-1)
       nodes[index].insert(objects.removeAt(i));
   }
-} //end split()
+}
   
 void insert(CollidableBody obj) {
   int index;
   
   childCount++;
 
-  if(nodes != null && (index = getIndexOf(obj))!=-1 && (
-      level!=0 || !(obj.collisionProfile.top<top || obj.collisionProfile.left<left || 
-      obj.collisionProfile.bottom > bottom || obj.collisionProfile.right > right))
-  ){
+  if(nodes != null && (index = getIndexOf(obj))!=-1){
     //[obj] belongs in a subnode
     nodes[index].insert(obj);
+    //print("insert lev:$level to i:$index");
     return;
   }
   
@@ -121,7 +153,8 @@ void insert(CollidableBody obj) {
     //node needs to be split
     split();
     String debug_s = nodes.map((n)=>n.objects.length).join(',');
-    print("split lev:$level, n:${objects.length}, sn:$debug_s h:${bottom-top}");
+    String debug_s2 = nodes.map((n)=>n.childCount).join(',');
+    print("split lev:$level, n:${objects.length}, sn:$debug_s sncc:$debug_s cc:$childCount");
   }
 }
 
@@ -136,33 +169,46 @@ bool remove(CollidableBody obj){
   }else return nodes[index].remove(obj);
 }
 
-void removeOrphans(){
-  for(int i=objects.length-1;i>=0;i--){
-    if(objects[i].collisionProfile.top < top || objects[i].collisionProfile.bottom > bottom || 
-     objects[i].collisionProfile.left < left || objects[i].collisionProfile.right > right){
-      orphanObjects.add(objects.removeAt(i));
-      objectRemoved();
+void checkObjects(){
+  int index;
+  //orphan objects that have wandered out of bounds
+  if(level!=0)
+    for(int i=objects.length-1;i>=0;i--){
+      if(objects[i].collisionProfile.top < top || objects[i].collisionProfile.bottom > bottom || 
+       objects[i].collisionProfile.left < left || objects[i].collisionProfile.right > right){
+        orphanObjects.add(objects.removeAt(i));
+        objectRemoved();
+      }
     }
-  }
-  if(nodes != null)
+  
+  if(nodes != null){
     for(QuadtreeNode node in nodes)
-      node.removeOrphans();
+      node.checkObjects(); //propagate a lower level
+    sift();   //allow objects to fall to lower nodes
+  }
 }
 
 void update(){
-  removeOrphans();
-  //insert orphans
+  //only intended to by called at top level
+  checkObjects();
+  //print("orphans: ${orphanObjects.length} tlos:${objects.length}");
+  //reinsert orphans
   for(int i=orphanObjects.length-1;i>=0;i--){
     insert(orphanObjects.removeAt(i));
   }
+  //print("after reinsert tlos:${objects.length}");
   cleanUp();
+  //print("after cleanup nodes: ${nodecount} tlos:${objects.length}");
 }
 
+///unplit nodes if they no longer have enough objects in them
 void cleanUp(){
   if(nodes != null){
     if(childCount < MIN_OBJECTS){
-      unsplit();print("node at level $level was unsplit, count:${objects.length}");}
-    else
+      unsplit();
+      print("node at level $level was unsplit, count:${objects.length}");
+      print("nodecount $nodecount avg:${100/nodecount},");
+    }else
       for(QuadtreeNode node in nodes)
         node.cleanUp();
   }
@@ -171,12 +217,14 @@ void cleanUp(){
 ///merges all objects from decendents into this one ([this] becomes a leaf)
 List<CollidableBody> unsplit(){
   if(nodes != null){
-    for(QuadtreeNode node in nodes)
+    for(QuadtreeNode node in nodes){
       objects.addAll(node.unsplit());
-      
+      node.objects.clear();
+    }  
     nodeCache.add(nodes);
     nodes = null;
-  }
+    nodecount -= 4;
+  }//**** there are still objects in it!!
   return objects;
 }
 

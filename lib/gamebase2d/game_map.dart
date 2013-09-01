@@ -3,7 +3,7 @@ part of gamebase2d;
 class GameMap{
   List<MapSprite> mapItems = [];
   
-  num lastTime = 0.0;
+  num lastTime;
   CanvasRenderingContext2D context;
   CanvasElement canvas;
   num width;
@@ -27,7 +27,13 @@ class GameMap{
   }
   
   void start() {
-    window.animationFrame.then(gameLoop);
+    window.animationFrame.then(firstFrame);
+    //window.animationFrame.then(gameLoop);
+  }
+  
+  void firstFrame(num time) {
+    lastTime = time;
+    window.animationFrame.then(gameLoop);  
   }
   
   void addSprite(MapSprite sprite){
@@ -35,16 +41,14 @@ class GameMap{
     CollidableBody collidable = sprite as CollidableBody;
     if(collidable != null) collisionManager.insert(collidable);
   }
-  
+  void debug(){}
   void gameLoop(num time){
     num dt = (time - lastTime)/1000.0;
     lastTime = time;
     //showFps(1.0/dt);
     
     context.clearRect(0, 0, width, height);
-    context..lineWidth = 0.5
-        ..fillStyle = 0xff0000
-        ..strokeStyle = 0xff00ff;
+    context..lineWidth = 0.5;
     
     collisionManager.update();
     collisionManager.checkCollisions();
