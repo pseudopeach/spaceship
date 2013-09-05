@@ -1,9 +1,37 @@
 import 'dart:html';
 import "package:commando/gamebase2d.dart";
+import "package:commando/command0.dart";
+import 'package:vector_math/vector_math.dart';
 
 void main() {
   CanvasElement canvas = query("#area");
-  window.setImmediate(new BallMap(canvas).start);
+  window.setImmediate(new BotMap(canvas).start);
+}
+
+class BotMap extends GameMap{
+BotMap(CanvasElement canvas): super(canvas);
+  Hoverbot bot;
+  void start(){
+    bot = new Hoverbot();
+    //bot.omega = .5;
+    bot.controller.targetTheta = 2;
+    bot.controller.natFreq = 1;
+    bot.position.x = 100.0;
+    bot.position.y= 100.0;
+    bot.theta = 3.0;
+    
+    bot.controller.targetPosition = new Vector2(1000.0,300.0);
+    addSprite(bot);
+    
+    super.start();
+  }
+num max = 0;
+  void gameLoop(num time){
+    if(bot.position.x>max) max = bot.position.x;
+    //print("max $max");
+    super.gameLoop(time);
+    
+  }
 }
 
 class BallMap extends GameMap{
@@ -23,6 +51,7 @@ class BallMap extends GameMap{
     }
     super.start();
   }
+ 
   
   void debug(){
     for(CollidableBody b1 in mapItems){

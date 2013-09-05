@@ -14,3 +14,4 @@ part 'gamebase2d/vector_sprite.dart';
 
 part 'gamebase2d/disc.dart';
 part 'gamebase2d/dude.dart';
+part 'gamebase2d/linear_controller.dart';

@@ -24,6 +24,12 @@ class InertialBody{
   }
 }
 
+abstract class Rotational{
+  num theta;
+  num omega;
+  Matrix2 get rotation;
+}
+
 class MapRect{
   MapRect(num width, num height){
     this.width = width;
