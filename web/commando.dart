@@ -20,7 +20,7 @@ BotMap(CanvasElement canvas): super(canvas);
     bot.position.y= 100.0;
     bot.theta = 3.0;
     
-    bot.controller.targetPosition = new Vector2(700.0,300.0);
+    bot.controller.targetPosition = new Vector2(900.0,300.0);
     Disc dot = new Disc();
     dot.radius = 30.0;
     dot.position = bot.controller.targetPosition;
