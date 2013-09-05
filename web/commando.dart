@@ -14,13 +14,19 @@ BotMap(CanvasElement canvas): super(canvas);
   void start(){
     bot = new Hoverbot();
     //bot.omega = .5;
-    bot.controller.targetTheta = 2;
+    bot.controller.targetTheta = -1.57;
     bot.controller.natFreq = 1;
     bot.position.x = 100.0;
     bot.position.y= 100.0;
     bot.theta = 3.0;
     
-    bot.controller.targetPosition = new Vector2(1000.0,300.0);
+    bot.controller.targetPosition = new Vector2(700.0,300.0);
+    Disc dot = new Disc();
+    dot.radius = 30.0;
+    dot.position = bot.controller.targetPosition;
+    bot.isCollidable = false;
+    
+    addSprite(dot);
     addSprite(bot);
     
     super.start();

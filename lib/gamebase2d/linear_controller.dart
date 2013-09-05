@@ -61,16 +61,17 @@ class LinearController{
       
     return out;
   }
-  
+  Vector2 bodyAlignedThrust = new Vector2.zero();
   Vector2 getThrusterOutput(Vector2 desired){
-    Vector2 bodyAligned = plant.rotation.transposed() * desired;
-    if(bodyAligned.x > thrustForwardMax)
-      bodyAligned.x = thrustForwardMax;
-    else if(bodyAligned.x < -thrustBackwardMax)
-      bodyAligned.x = -thrustBackwardMax;
-    if(bodyAligned.y.abs() > thrustLateralMax)
-      bodyAligned.y = thrustLateralMax * (bodyAligned.y>0?1:-1);
-    return bodyAligned;
+    bodyAlignedThrust = plant.rotation.transposed() * desired;
+    Vector2 bat = bodyAlignedThrust;
+    if(bat.x > thrustForwardMax)
+      bat.x = thrustForwardMax;
+    else if(bat.x < -thrustBackwardMax)
+      bat.x = -thrustBackwardMax;
+    if(bat.y.abs() > thrustLateralMax)
+      bat.y = thrustLateralMax * (bat.y>0?1:-1);
+    return bat;
   }
   
   num getMomentCommand(){
