@@ -3,19 +3,31 @@ import "package:commando/gamebase2d.dart";
 import "package:commando/command0.dart";
 import 'package:vector_math/vector_math.dart';
 
+ShootyTest level;
 void main() {
   CanvasElement canvas = query("#area");
-  window.setImmediate(Director.start());
-  canvas.onClick.listen((e)=>onClick(e) );
+  level = new ShootyTest();
+  GameManager.canvas = canvas;
+  GameManager.loadLevel(level);
+  window.setImmediate(GameManager.start);
 }
 
 void onClick(var e){
   print("click $e");
 }
 
-//Vector2 targetPoint = new 
+class ShootyTest implements Level{
 
+  GameMap map = new GameMap();
+  
+  List<Hoverbot> bots = [];
+  void start(){
+    //make 5 bots
+    
+    
+  }
 
+}
 
 Element notes = query("#fps");
 num fpsAverage;
