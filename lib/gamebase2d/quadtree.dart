@@ -85,8 +85,8 @@ bool isCorrect(CollidableBody obj){
 }
 
 void notifyOfApproach(CollidableBody body1, CollidableBody body2){
-  body1.approach(body2);
-  body2.approach(body1);
+  body1.onApproach(body2);
+  body2.onApproach(body1);
 }
 
 void split() {

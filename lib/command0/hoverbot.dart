@@ -37,6 +37,7 @@ class Hoverbot extends Dude{
   
   LinearController controller;
   Map<String,List<Vector2>> thrusters;
+  String mainColor = "#cccccc";
   
   void updateBeforeDraw(num dt){
     Vector3 controlInput = controller.getCommand();
@@ -69,7 +70,7 @@ class Hoverbot extends Dude{
           thrusters["y+"],
           controller.bodyAlignedThrust.x/controller.thrustLateralMax,
           context,transform);
-    context.fillStyle = "#cccccc";;
+    context.fillStyle = mainColor;
     super.draw(context);
   }
   

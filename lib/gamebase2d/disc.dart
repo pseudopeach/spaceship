@@ -33,7 +33,7 @@ class Disc extends MapSprite implements CollidableBody{
       ..closePath();
   }
   
-  void approach(CollidableBody other){
+  void onApproach(CollidableBody other){
     Disc otherDisc = other;
     //print("collision ${this.radius} with ${otherDisc.radius}");
     num d2 = (otherDisc.position - this.position).length2;

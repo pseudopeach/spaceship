@@ -7,6 +7,6 @@ abstract class Level{
   
   void startLevel();
   
-  bool checkForEndCondition(GameMap map);
+  bool checkForEndCondition();
   
 }

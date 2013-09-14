@@ -30,7 +30,7 @@ class Dude extends VectorSprite implements CollidableBody, InertialBody{
   
   void attack(MapSprite target){
     _task = target;
-    Director.watch(target);
+    //GameManager.watch(target);
   }
   
   void beIdle(){

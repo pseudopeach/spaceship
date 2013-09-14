@@ -5,26 +5,11 @@ class GameMap{
   
   
   CanvasRenderingContext2D context;
-  CanvasElement canvas;
+  CanvasElement _canvas;
   num width;
   num height;
   
   QuadtreeNode collisionManager;
-  
-  GameMap(this.canvas){
-    //CanvasElement canvas = query("#area");
-    width = canvas.width;
-    height = canvas.height;
-    
-    Rect rect = canvas.parent.client;
-    width = rect.width;
-    height = rect.height;
-    canvas.width = width;
-    
-    collisionManager = new QuadtreeNode(right:width, bottom:height);
-    
-    context = canvas.context2D;
-  }
   
   void addSprite(MapSprite sprite){
     mapItems.add(sprite);
@@ -33,7 +18,14 @@ class GameMap{
   }
   void debug(){}
   
-  void update(num dt){
+  
+  void nextFrame(num dt){
+    context.clearRect(0, 0, width, height);
+    context..lineWidth = 0.5;
+    
+    collisionManager.update();
+    collisionManager.checkCollisions();
+  
     for(MapSprite item in mapItems)
       item.updateBeforeDraw(dt);
         
@@ -42,6 +34,21 @@ class GameMap{
         
     for(MapSprite item in mapItems)
       item.updateAfterDraw();
+  }
+  
+  void set canvas(CanvasElement canv){
+    _canvas = canv;
+    width = _canvas.width;
+    height = _canvas.height;
+    
+    Rect rect = _canvas.parent.client;
+    width = rect.width;
+    height = rect.height;
+    _canvas.width = width;
+    
+    collisionManager = new QuadtreeNode(right:width, bottom:height);
+    
+    context = _canvas.context2D;
   }
   
   

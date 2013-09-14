@@ -16,15 +16,23 @@ class GameManager{
   }
   
   static void loadLevel(level){
+    level.map.canvas = inst._canvas;
     inst._currentLevel = level;
-  }
-  static void set canvas(CanvasElement value){
-    inst._canvas = value;
-    //set rendering context
+    inst._currentLevel.initLevel();
   }
   
+  static void set canvas(CanvasElement value){
+    inst._canvas = value;
+    if(inst._currentLevel != null && inst._currentLevel.map != null)
+      inst._currentLevel.map.canvas = value;
+  }
+  static CanvasElement get canvas => inst._canvas;
+  
   static void start() {
-    window.animationFrame.then(firstFrame);
+    if(inst._canvas ==null || inst._currentLevel ==null) 
+      throw "Can't start without canvas and level set.";
+    
+    window.animationFrame.then(_instance.firstFrame);
     //window.animationFrame.then(gameLoop);
   }
   
@@ -36,25 +44,22 @@ class GameManager{
     
   }
   void firstFrame(num time) {
-    lastTime = time;
+    _lastTime = time;
+    inst._currentLevel.startLevel();
     window.animationFrame.then(gameLoop);  
   }
   
   
   void gameLoop(num time){
-    num dt = (time - lastTime)/1000.0;
-    lastTime = time;
+    num dt = (time - _lastTime)/1000.0;
+    _lastTime = time;
     //showFps(1.0/dt);
     
-    context.clearRect(0, 0, width, height);
-    context..lineWidth = 0.5;
     
-    collisionManager.update();
-    collisionManager.checkCollisions();
     //debug();
     //bounceEdges();
     
-    map.update(dt);
+    _map.nextFrame(dt);
            
     window.animationFrame.then(gameLoop);
   }

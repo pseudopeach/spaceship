@@ -61,7 +61,7 @@ class MapRect{
 ///can be added to the quadtree
 abstract class CollidableBody{
   bool get isCollidable;
-  void approach(CollidableBody other);
+  void onApproach(CollidableBody other);
   MapRect get collisionProfile;
   Vector2 get position;
   //String log;
