@@ -16,6 +16,13 @@ class GameMap{
     CollidableBody collidable = sprite as CollidableBody;
     if(collidable != null) collisionManager.insert(collidable);
   }
+  
+  void removeSprite(MapSprite sprite){
+    mapItems.remove(sprite);
+    CollidableBody collidable = sprite as CollidableBody;
+    if(collidable != null) assert(collisionManager.remove(collidable));
+  }
+  
   void debug(){}
   
   

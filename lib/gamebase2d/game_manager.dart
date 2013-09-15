@@ -5,6 +5,8 @@ class GameManager{
   num _lastTime;
   GameMap _map;
   Level _currentLevel;
+  StreamController<GameEvent> eventCtrl =
+    new StreamController<GameEvent>.broadcast();
   
   CanvasElement _canvas;
   //renderingContext _context;
@@ -63,4 +65,18 @@ class GameManager{
            
     window.animationFrame.then(gameLoop);
   }
+  
+  static void onBodyAdded(CollidableBody body){
+    GameEvent event = new GameEvent(type:GameEvent.BODY_ADDED, body:body);
+    event.location = new Vector2.copy(body.position);
+    inst.eventCtrl.add(event);
+  }
+  static void removeBody(CollidableBody body){
+    inst._currentLevel.map.removeSprite(body as MapSprite);
+    GameEvent event = new GameEvent(type:GameEvent.BODY_REMOVED, body:body);
+    event.location = new Vector2.copy(body.position);
+    inst.eventCtrl.add(event);
+  }
+  
+  //void addGameEventListener(String type, 
 }
