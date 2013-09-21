@@ -3,7 +3,7 @@ part of gamebase2d;
 class GameManager{
   static GameManager _instance;
   num _lastTime;
-  GameMap _map;
+  GameMap map;
   Level _currentLevel;
   StreamController<GameEvent> eventCtrl =
     new StreamController<GameEvent>.broadcast();
@@ -17,10 +17,11 @@ class GameManager{
     return _instance;
   }
   
-  static void loadLevel(level){
+  static void loadLevel(Level level){
     level.map.canvas = inst._canvas;
     inst._currentLevel = level;
     inst._currentLevel.initLevel();
+    inst.map = level.map;
   }
   
   static void set canvas(CanvasElement value){
@@ -61,7 +62,7 @@ class GameManager{
     //debug();
     //bounceEdges();
     
-    _map.nextFrame(dt);
+    map.nextFrame(dt);
            
     window.animationFrame.then(gameLoop);
   }
@@ -72,11 +73,20 @@ class GameManager{
     inst.eventCtrl.add(event);
   }
   static void removeBody(CollidableBody body){
-    inst._currentLevel.map.removeSprite(body as MapSprite);
+    inst.map.removeSprite(body as MapSprite);
     GameEvent event = new GameEvent(type:GameEvent.BODY_REMOVED, body:body);
     event.location = new Vector2.copy(body.position);
     inst.eventCtrl.add(event);
   }
+  
+  static Stream<GameEvent> watchBody(CollidableBody body, [String type]){
+    Stream<GameEvent> out = inst.eventCtrl.stream.where((e)=>e.body == body);
+    if(type != null) out = out.where((e)=>e.type == type);
+    return out;
+  }
+  
+  static Stream<GameEvent> get mapEvents => inst.eventCtrl.stream;
+  
   
   //void addGameEventListener(String type, 
 }

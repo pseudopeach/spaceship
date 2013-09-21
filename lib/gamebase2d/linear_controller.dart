@@ -97,6 +97,8 @@ class LinearController{
   }
   
   num getMomentCommand(){
+    if(_nextTheta == null) return 0.0;
+    
     num error = (plant.theta - _nextTheta)%toopi;
     if(error < -Math.PI) error += toopi;
     else if(error > Math.PI) error -= toopi;

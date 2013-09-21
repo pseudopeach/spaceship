@@ -159,8 +159,8 @@ void insert(CollidableBody obj) {
 }
 
 bool remove(CollidableBody obj){
-  int index = getIndexOf(obj);
-  if(nodes == null || index == -1){
+  int index;
+  if(nodes == null || (index=getIndexOf(obj)) == -1){
     if(objects.remove(obj)){
       objectRemoved();
       return true;

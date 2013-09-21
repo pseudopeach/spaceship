@@ -39,6 +39,11 @@ class Hoverbot extends Dude{
   Map<String,List<Vector2>> thrusters;
   String mainColor = "#cccccc";
   
+  void attack(Dude target){
+    super.attack(target);
+    print("I will attack $target");
+  }
+  
   void updateBeforeDraw(num dt){
     Vector3 controlInput = controller.getCommand();
     force += controlInput.xy;

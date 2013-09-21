@@ -1,12 +1,16 @@
 part of gamebase2d;
 
-class Disc extends Projectile implements CollidableBody{
+class Disc extends Dude implements CollidableBody{
   
   String color = "black";
+  num radius = 1.0;
   
   MapRect get boundingRect => collisionProfile;
   //String log = "";
   bool isColliding = false;
+  
+  StreamController<GameEvent> eventCtrl = 
+      new  StreamController<GameEvent>.broadcast();
   
   void draw(CanvasRenderingContext2D context, [Matrix3 transform]){
     //***todo fix for zooming
@@ -21,11 +25,15 @@ class Disc extends Projectile implements CollidableBody{
   
   void onApproach(CollidableBody other){
     if((other.position-position).length2 < radius*radius){
-      if(radius > 10)
-        radius -= 10;
+      if(radius > 5)
+        radius -= 5;
       else
         GameManager.removeBody(this);
     }
+  }
+  
+  void removeSelf(){
+    
   }
  
 }

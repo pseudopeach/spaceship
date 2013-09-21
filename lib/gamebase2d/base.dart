@@ -22,6 +22,10 @@ class InertialBody{
     position.add(velocity.scaled(dt));
     force.setZero();
   }
+  
+  void bounceOff(Vector2 norm){
+      velocity.reflect(norm);
+  }
 }
 
 abstract class Rotational{
@@ -64,5 +68,6 @@ abstract class CollidableBody{
   void onApproach(CollidableBody other);
   MapRect get collisionProfile;
   Vector2 get position;
+  
   //String log;
 }

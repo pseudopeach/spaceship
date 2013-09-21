@@ -7,7 +7,7 @@ import 'dart:math';
 Level level;
 void main() {
   CanvasElement canvas = query("#area");
-  level = new ShootyTest();
+  ShootyTest level = new ShootyTest();
   GameManager.canvas = canvas;
   GameManager.loadLevel(level);
   window.setImmediate(GameManager.start);
@@ -21,29 +21,42 @@ class ShootyTest implements Level{
     //create 5 bots
     for(int i=0;i<5;i++){
       Hoverbot bot = new Hoverbot();
-      bot.position = new Vector2(200.0+30.0*i, 500.0);
+      bot.position.setValues(200.0+30.0*i, 500.0);
       bot.mainColor = "red";
       bots.add(bot);
       map.addSprite(bot);
+      GameManager.mapEvents.where((e)=>e.type == GameEvent.BODY_ADDED).
+        listen((e)=>bot.attack(e.body));
+      bot.watchFor(GameEvent.BODY_IDLE).listen((e)=>onBotIdle(e));
+    }
+  }
+  
+  void onBotIdle(GameEvent e){
+    if(targets.length > 0){
+      Hoverbot bot = e.body as Hoverbot;
+      bot.attack(targets.first);
     }
   }
   
   void startLevel(){
       //set event listener
       GameManager.canvas.onClick.listen((e)=>onClick(e));
+      GameManager.mapEvents.listen((e)=>targets.remove(e.body) );
   }
+  
   Random rand = new Random();
-  void onClick(var e){
+  void onClick(MouseEvent e){
     print("click $e");
     Disc disc = new Disc();
-    double vel = rand.nextDouble()*10;
+    disc.position.setValues(e.offset.x.toDouble(), e.offset.y.toDouble());
+    double vel = rand.nextDouble()*50;
     double th = rand.nextDouble()*6;
     disc.radius = 30.0;
     disc.color = "blue";
-    disc.movement.velocity = new Vector2(vel*cos(th),vel*sin(th));
+    disc.isBouncy = true;
+    disc.velocity.setValues(vel*cos(th),vel*sin(th));
     targets.add(disc);
     map.addSprite(disc);
-    bots.forEach((b)=>b.attack(disc));
   }
   
   bool checkForEndCondition(){

@@ -9,12 +9,20 @@ class GameMap{
   num width;
   num height;
   
+  num get top => 0.0;
+  num get left => 0.0;
+  num get right => width;
+  num get bottom => height;
+  
   QuadtreeNode collisionManager;
   
   void addSprite(MapSprite sprite){
     mapItems.add(sprite);
     CollidableBody collidable = sprite as CollidableBody;
-    if(collidable != null) collisionManager.insert(collidable);
+    if(collidable != null){ 
+      collisionManager.insert(collidable);
+      GameManager.onBodyAdded(collidable);
+    }
   }
   
   void removeSprite(MapSprite sprite){
