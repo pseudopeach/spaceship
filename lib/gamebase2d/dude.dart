@@ -2,6 +2,8 @@ part of gamebase2d;
 
 ///moves and has awareness
 class Dude extends VectorSprite implements CollidableBody, InertialBody{
+  
+  
   num hitPoints = 1.0;
   dynamic _task;
   StreamController<GameEvent> eventCtrl = 
@@ -14,8 +16,11 @@ class Dude extends VectorSprite implements CollidableBody, InertialBody{
   bool isBouncy = false;
   num inertia;
   
-  LinearController controller;
+  //CollidableBody targetBody;
+  
+  Autopilot autoPilot;
   Vector3 controlInput;
+  Weapon weapon;
   
   Dude(){
     _movement = new InertialBody();
@@ -25,26 +30,44 @@ class Dude extends VectorSprite implements CollidableBody, InertialBody{
   
   // ==== Commando API ====
   void moveTo(Vector2 pos, [num tOri=null]){
-    if(tOri!=null)
-      _task = new Vector3(pos.x,pos.y,tOri);
-    else
-      _task = new Vector2.copy(pos);
+    autoPilot.setMission(position:pos, theta:tOri, velocity: new Vector2.zero());
   }
   
-  void attack(Dude target){
+  void attack(CollidableBody target){
     _task = target;
     target.watchFor(GameEvent.BODY_REMOVED).listen((e)=>beIdle());
   }
   
   void beIdle(){
-    _task = null;
+    weapon.fireAtWill = false;
+    autoPilot.cancelMission();
     GameEvent event = new GameEvent(type:GameEvent.BODY_IDLE,body:this);
     eventCtrl.add(event);
   }
   
   // ==== Callbacks ====
+  void executeTask(){
+    if(_task is CollidableBody){
+      //seek and destroy body
+      CollidableBody targetBody = _task;
+      if(weapon.isInRange(targetBody)){
+        autoPilot.setMission(theta: weapon.getFiringSolution(targetBody));
+        weapon.fireAtWill = true;
+      }else{
+        weapon.fireAtWill = false;
+        autoPilot.setMission(
+            position:weapon.getFiringPosition(targetBody),
+            velocity:(targetBody as InertialBody).velocity
+        );
+      } 
+    }else if(_task is Vector2){
+      //seek position
+      Vector2 targetPosition = _task;
+    }
+  }
+  
   void onApproach(CollidableBody other){
-    
+    autoPilot.checkCollisionForecast(other);
   }
   
   void onCollideWith(CollidableBody other){

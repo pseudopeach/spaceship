@@ -19,4 +19,6 @@ part 'gamebase2d/vector_sprite.dart';
 part 'gamebase2d/disc.dart';
 part 'gamebase2d/projectile.dart';
 part 'gamebase2d/dude.dart';
+part 'gamebase2d/weapon.dart';
 part 'gamebase2d/linear_controller.dart';
+part 'gamebase2d/autopilot.dart';

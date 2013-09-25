@@ -69,5 +69,6 @@ abstract class CollidableBody{
   MapRect get collisionProfile;
   Vector2 get position;
   
+  Stream<GameEvent> watchFor(String type);
   //String log;
 }

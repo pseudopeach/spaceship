@@ -28,20 +28,44 @@ class Hoverbot extends Dude{
       new Vector2(25.0,1.0)]
       
     };
+    
     inertia = 10000.0;
     controller = new LinearController(this);
     controller.dampingRatio = 0.7071;
     controller.natFreq = 2.0;
     
+    weapon = new Weapon(host:this, projectileType:()=>new BotBullet());
   }
   
-  LinearController controller;
+
+  
+  //LinearController controller;
   Map<String,List<Vector2>> thrusters;
   String mainColor = "#cccccc";
   
   void attack(Dude target){
     super.attack(target);
     print("I will attack $target");
+  }
+  
+  double firingAngle;
+  
+  void aimAt(Dude dude){
+    Vector2 diff = dude.position - position;
+    Vector2 relV = dude.velocity - velocity;
+    double relS = relV.normalizeLength();
+    double dist = diff.length;
+    
+    firingAngle = Math.atan2(diff.y, diff.x);
+  
+    if(relS > .1){
+      //correct for relative speed
+      double sinCorr = relS/BULLET_SPEED * diff.cross(relV) / dist;
+      //if(sinCorr.abs() > 1.0) return; //no firing solution
+      firingAngle += Math.asin(sinCorr);
+    }
+    
+    autoPilot.setMission(theta:firingAngle);
   }
   
   void updateBeforeDraw(num dt){

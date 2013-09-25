@@ -1,10 +1,6 @@
 part of gamebase2d;
 class LinearController{
   final num toopi = Math.PI*2.0;
-  static const String CONTROL_MODE_STATION = "station";
-  static const String CONTROL_MODE_CRUISE = "cruise";
-  static const String CONTROL_MODE_ATTACK = "attack";
-  static const String CONTROL_MODE_EVADE = "evade";
   
   num thrustForwardMax = 80000.0;
   num thrustBackwardMax = 20000.0;
@@ -15,19 +11,14 @@ class LinearController{
   bool _usingDirectionOverride = false;
   bool _usingCruiseMode = false;
   
-  String mode = CONTROL_MODE_STATION; //station, cruise, attack, evade
-  
   num _dampingRatio = 0.7071;
   num _natFreq = 0.1;
   num _cruisingSpeed = 150.0;
   num _stoppingDistance2;
   
-  //Vector2 targetPosition;
+  Vector2 targetPosition;
+  Vector2 targetVelocity;
   num targetTheta;
-  
-  Vector2 _nextPosition;
-  Vector2 _nextVelocity;
-  num _nextTheta;
   
   Vector2 kGains = new Vector2.zero();
   Matrix2 feedbackState = new Matrix2.zero();
@@ -36,29 +27,26 @@ class LinearController{
   
   LinearController(this.plant);
   
-  Vector2 get targetPosition => _nextPosition;
-  set targetPosition(Vector2 value) => _nextPosition = value;
-  
   ///determines control command to be applied to the plant
   Vector3 getCommand(){
     Vector3 out = new Vector3.zero();
     Vector2 des;
     
     //position seeking
-    if(_nextPosition != null){
-      Vector2 posError = plant.position-_nextPosition;
+    if(targetPosition != null){
+      Vector2 posError = plant.position-targetPosition;
       
-      //if we are far from _nextPosition, enter cruise mode
+      //if we are far from targetPosition, enter cruise mode
       
       _usingCruiseMode = posError.length2 > _stoppingDistance2;
       
       
       if(_usingCruiseMode){
-        _nextVelocity = posError.scaled(-cruisingSpeed/posError.length);
+        targetVelocity = posError.scaled(-cruisingSpeed/posError.length);
         feedbackState.setZero();
-        feedbackState.setColumn(1, plant.velocity-_nextVelocity);
+        feedbackState.setColumn(1, plant.velocity-targetVelocity);
       }else
-        feedbackState.setColumns(plant.position-_nextPosition, plant.velocity);
+        feedbackState.setColumns(plant.position-targetPosition, plant.velocity);
     
       //calc thrust inputs
       des = feedbackState * kGains;
@@ -75,7 +63,7 @@ class LinearController{
     }
     
     //calc rotation command
-    _nextTheta = _usingDirectionOverride && des!=null ?
+    targetTheta = _usingDirectionOverride && des!=null ?
         Math.atan2(des.y, des.x) : targetTheta;
     
     out.z = getMomentCommand();
@@ -97,9 +85,9 @@ class LinearController{
   }
   
   num getMomentCommand(){
-    if(_nextTheta == null) return 0.0;
+    if(targetTheta == null) return 0.0;
     
-    num error = (plant.theta - _nextTheta)%toopi;
+    num error = (plant.theta - targetTheta)%toopi;
     if(error < -Math.PI) error += toopi;
     else if(error > Math.PI) error -= toopi;
     
