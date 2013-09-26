@@ -10,6 +10,7 @@ class Weapon<T>{
   Dude host;
   
   Builder projectileType;
+  Timer fireer;
   
   Weapon({this.host, this.projectileType});
   
@@ -59,14 +60,14 @@ class Weapon<T>{
   }
   
   bool _fireAtWill = false;
-  StreamSubscription<num> firingCallbacks;
+  
   set fireAtWill(bool value){
     _fireAtWill = value;
     if(_fireAtWill){
-      firingCallbacks = GameManager.scheduleCallbacks(1000.0/firingDelay).
-          listen((n)=>fireIfReady());
+      fireer = new Timer.periodic(
+          new Duration(milliseconds: 100),(t) => fireIfReady());
     }else
-      firingCallbacks.cancel();
+      fireer.cancel();
   }
   
   
