@@ -25,15 +25,29 @@ class Disc extends Dude implements CollidableBody{
   
   void onApproach(CollidableBody other){
     if((other.position-position).length2 < radius*radius){
-      if(radius > 5)
-        radius -= 5;
-      else
-        GameManager.removeBody(this);
+      other.onCollidedWith(this);
+      takeDamage();
     }
   }
   
+  void onCollidedWith(CollidableBody other){
+    takeDamage();
+  }
+  
+  void takeDamage(){
+    //get smaller or die
+    if(radius > 5)
+      radius -= 5;
+    else
+      removeSelf();
+  }
+  
   void removeSelf(){
-    
+    print("disc removing self");
+    GameEvent e = new GameEvent(body:this, type:GameEvent.BODY_REMOVED);
+    eventCtrl.add(e);
+    //****todo find a way to only create the event once
+    GameManager.removeBody(this);
   }
  
 }

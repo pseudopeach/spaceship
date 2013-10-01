@@ -1,9 +1,7 @@
 part of gamebase2d;
 
-///moves and has awareness
-class Dude extends VectorSprite implements CollidableBody, InertialBody{
-  
-  
+///Dudes move and have AI. They can be in a base and can be killed.
+class Dude extends VectorSprite implements CollidableBody, InertialBody{ 
   num hitPoints = 1.0;
   dynamic _task;
   StreamController<GameEvent> eventCtrl = 
@@ -14,7 +12,7 @@ class Dude extends VectorSprite implements CollidableBody, InertialBody{
   InertialBody _movement;
   bool isCollidable = true;
   bool isBouncy = false;
-  num inertia;
+  num _inertia;
   
   //CollidableBody targetBody;
   
@@ -24,8 +22,8 @@ class Dude extends VectorSprite implements CollidableBody, InertialBody{
   
   Dude(){
     _movement = new InertialBody();
-    this.position = _movement.position;
     collisionProfile.center = position;
+    autoPilot = new Autopilot(this);
   }
   
   // ==== Commando API ====
@@ -39,6 +37,8 @@ class Dude extends VectorSprite implements CollidableBody, InertialBody{
   }
   
   void beIdle(){
+    print("dude $this idle");
+    _task = null;
     weapon.fireAtWill = false;
     autoPilot.cancelMission();
     GameEvent event = new GameEvent(type:GameEvent.BODY_IDLE,body:this);
@@ -70,8 +70,8 @@ class Dude extends VectorSprite implements CollidableBody, InertialBody{
     autoPilot.checkCollisionForecast(other);
   }
   
-  void onCollideWith(CollidableBody other){
-    
+  void onCollidedWith(CollidableBody other){
+    //todo***
   }
   
   void onDamage(num damageValue, [MapSprite attacker=null]){
@@ -106,7 +106,19 @@ class Dude extends VectorSprite implements CollidableBody, InertialBody{
   void update(num dt) => updateBeforeDraw(dt);
   
   num get mass => _movement.mass;
-  set mass(num value) => _movement.mass = value;
+  set mass(num value){
+    _movement.mass = value;
+    autoPilot.controller.calcKGains();
+  }
+  
+  num get inertia => _inertia;
+  set inertia(num value){
+    _inertia = value;
+    autoPilot.controller.calcKGains();
+  }
+  
+  Vector2 get position => _movement.position;
+  set position(Vector2 value)=> _movement.position = value;
   
   Vector2 get velocity => _movement.velocity;
   set velocity(Vector2 value)=> _movement.velocity = value;
@@ -118,7 +130,6 @@ class Dude extends VectorSprite implements CollidableBody, InertialBody{
   
   Stream<GameEvent> watchFor(String type) => 
       eventCtrl.stream.where((e)=>e.type==type);
-  Stream<GameEvent> ffff(String type) => 
-      eventCtrl.stream.where((e)=>e.type==type);
+ 
   void bounceOff(Vector2 surfDir) => _movement.bounceOff(surfDir);
 }

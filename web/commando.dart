@@ -19,13 +19,16 @@ class ShootyTest implements Level{
   
   void initLevel(){
     //create 5 bots
-    for(int i=0;i<5;i++){
+    for(int i=0;i<1;i++){
       Hoverbot bot = new Hoverbot();
       bot.position.setValues(200.0+30.0*i, 500.0);
       bot.mainColor = "red";
       bots.add(bot);
       map.addSprite(bot);
-      GameManager.mapEvents.where((e)=>e.type == GameEvent.BODY_ADDED).
+      GameManager.mapEvents.where((e)=>
+          (e.type == GameEvent.BODY_ADDED &&
+          e.body is Disc)
+      ).
         listen((e)=>bot.attack(e.body));
       bot.watchFor(GameEvent.BODY_IDLE).listen((e)=>onBotIdle(e));
     }
@@ -42,21 +45,26 @@ class ShootyTest implements Level{
       //set event listener
       GameManager.canvas.onClick.listen((e)=>onClick(e));
       GameManager.mapEvents.listen((e)=>targets.remove(e.body) );
+      
   }
   
   Random rand = new Random();
   void onClick(MouseEvent e){
     print("click $e");
+    /*bots.first.autoPilot.controller.targetPosition = 
+        new Vector2(e.offset.x.toDouble(),e.offset.y.toDouble());*/
+    
     Disc disc = new Disc();
     disc.position.setValues(e.offset.x.toDouble(), e.offset.y.toDouble());
-    double vel = rand.nextDouble()*50;
-    double th = rand.nextDouble()*6;
+    double vel = 80.0;//rand.nextDouble()*50+100.0;
+    double th = 3.2;//rand.nextDouble()*6;
     disc.radius = 30.0;
     disc.color = "blue";
     disc.isBouncy = true;
     disc.velocity.setValues(vel*cos(th),vel*sin(th));
     targets.add(disc);
     map.addSprite(disc);
+    
   }
   
   bool checkForEndCondition(){

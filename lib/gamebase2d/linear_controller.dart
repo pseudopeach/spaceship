@@ -40,7 +40,6 @@ class LinearController{
       
       _usingCruiseMode = posError.length2 > _stoppingDistance2;
       
-      
       if(_usingCruiseMode){
         targetVelocity = posError.scaled(-cruisingSpeed/posError.length);
         feedbackState.setZero();
@@ -55,6 +54,7 @@ class LinearController{
       Vector2 thrust = getThrusterOutput(des);
       out.xy = plant.rotation * thrust;
       
+      //print("desired thrust des=$des, s=$feedbackState k=$kGains");
       //apply _direction override (if applicable)
       if(!_usingDirectionOverride && thrust.length * 2.5 < des.length)
         _usingDirectionOverride = true;
@@ -67,7 +67,7 @@ class LinearController{
         Math.atan2(des.y, des.x) : targetTheta;
     
     out.z = getMomentCommand();
-      
+     
     return out;
   }
   
@@ -96,8 +96,8 @@ class LinearController{
         4.0*_natFreq*_natFreq*error
     );
     
-    if(moment.abs() > thrustMomentMax)
-      moment = thrustMomentMax * (moment>0?1.0:-1.0);
+    /*if(moment.abs() > thrustMomentMax)
+      moment = thrustMomentMax * (moment>0?1.0:-1.0);*/
     //print("error:$error moment:$moment");
     return moment;
   }
@@ -127,6 +127,7 @@ class LinearController{
     _stoppingDistance2 = Math.pow(
         1.1*(kGains.g*cruisingSpeed-thrustForwardMax)/kGains.r,
     2.0);
+    print("Stopping dist: ${Math.sqrt(_stoppingDistance2)}");
   }
   
 }

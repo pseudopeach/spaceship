@@ -1,10 +1,15 @@
 part of command0;
 
 class Hoverbot extends Dude{
+  Flying _movement = new Flying();
+  num actualBodyRadius = 30.0;
+  Timer aiTimer;
+ 
   Hoverbot(){
-    Flying _movement = new Flying();
     mass = 1000.0;
-    omega=0.0;
+    omega = 0.0;
+    inertia = 10000;
+
     points = [
       new Vector2(25.0,0.0), 
       new Vector2(25.0,10.0),
@@ -29,17 +34,16 @@ class Hoverbot extends Dude{
       
     };
     
-    inertia = 10000.0;
-    controller = new LinearController(this);
-    controller.dampingRatio = 0.7071;
-    controller.natFreq = 2.0;
     
     weapon = new Weapon(host:this, projectileType:()=>new BotBullet());
+    
+    //take this out later
+    aiTimer = new Timer.periodic(
+        new Duration(milliseconds:200), 
+        (t) => executeTask());
   }
-  
-
-  
-  //LinearController controller;
+   
+  //LinearautoPilot autoPilot;
   Map<String,List<Vector2>> thrusters;
   String mainColor = "#cccccc";
   
@@ -50,54 +54,36 @@ class Hoverbot extends Dude{
   
   double firingAngle;
   
-  void aimAt(Dude dude){
-    Vector2 diff = dude.position - position;
-    Vector2 relV = dude.velocity - velocity;
-    double relS = relV.normalizeLength();
-    double dist = diff.length;
-    
-    firingAngle = Math.atan2(diff.y, diff.x);
-  
-    if(relS > .1){
-      //correct for relative speed
-      double sinCorr = relS/BULLET_SPEED * diff.cross(relV) / dist;
-      //if(sinCorr.abs() > 1.0) return; //no firing solution
-      firingAngle += Math.asin(sinCorr);
-    }
-    
-    autoPilot.setMission(theta:firingAngle);
-  }
-  
   void updateBeforeDraw(num dt){
-    Vector3 controlInput = controller.getCommand();
+    Vector3 controlInput = autoPilot.getCommand();
     force += controlInput.xy;
     //print(controlInput);
     //print("thrust ${controlInput.xy}");
-    omega += controller.getCommand().z/inertia*dt;
+    omega += autoPilot.getCommand().z/inertia*dt;
     super.updateBeforeDraw(dt);
   }
  
   void draw(CanvasRenderingContext2D context, [Matrix3 transform]){
     
-    if(controller.bodyAlignedThrust.x < 0)
+    if(autoPilot.bodyAlignedThrust.x < 0)
       drawFlame(
           thrusters["x-"],
-          -controller.bodyAlignedThrust.x/controller.thrustBackwardMax,
+          -autoPilot.bodyAlignedThrust.x/20000.0,
           context,transform);
     else
       drawFlame(
           thrusters["x+"],
-          controller.bodyAlignedThrust.x/controller.thrustForwardMax,
+          autoPilot.bodyAlignedThrust.x/80000.0,
           context,transform);
-    if(controller.bodyAlignedThrust.y < 0)
+    if(autoPilot.bodyAlignedThrust.y < 0)
       drawFlame(
           thrusters["y-"],
-          -controller.bodyAlignedThrust.y/controller.thrustLateralMax,
+          -autoPilot.bodyAlignedThrust.y/20000.0,
           context,transform);
     else
       drawFlame(
           thrusters["y+"],
-          controller.bodyAlignedThrust.x/controller.thrustLateralMax,
+          autoPilot.bodyAlignedThrust.x/80000.0,
           context,transform);
     context.fillStyle = mainColor;
     super.draw(context);

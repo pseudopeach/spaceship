@@ -28,7 +28,11 @@ class GameMap{
   void removeSprite(MapSprite sprite){
     mapItems.remove(sprite);
     CollidableBody collidable = sprite as CollidableBody;
-    if(collidable != null) assert(collisionManager.remove(collidable));
+    if(collidable != null){ 
+      if(!collisionManager.remove(collidable)){
+        print("WARNING: could not find $collidable in quadtree");
+      }
+    }
   }
   
   void debug(){}

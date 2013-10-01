@@ -2,20 +2,20 @@ part of gamebase2d;
 typedef Projectile Builder();
 
 class Weapon<T>{
-  double projectileSpeed = 50.0; //px/s
-  double projectileLifespan = 5.0; //sec
-  double firingDelay = 0.5; //sec
+  double firingDelay;
   double projectileRange;
-
   Dude host;
   
-  Builder projectileType;
+  static const double FIRING_SPEED = 150.0; //px/s
+  Builder _projectileType;
   Timer fireer;
   
-  Weapon({this.host, this.projectileType});
+  Weapon({this.host, Builder projectileType}){
+    this.projectileType = projectileType;
+  }
   
   bool isInRange(CollidableBody body){
-    
+    return (body.position - host.position).length < projectileRange;
   }
   double firingAngle = 0.0;
   double getFiringSolution(CollidableBody target){
@@ -25,11 +25,11 @@ class Weapon<T>{
     
     if(target is InertialBody){
       Vector2 relV = (target as InertialBody).velocity - host.velocity;
-      double relS = relV.normalizeLength();
-    
+      double relS = 1.0/relV.normalizeLength();
+      //print("relS $relS");
       if(relS > .1){
         //correct for relative speed
-        double sinCorr = relS/projectileSpeed * diff.cross(relV) / dist;
+        double sinCorr = relS/FIRING_SPEED * diff.cross(relV) / dist;
         //if(sinCorr.abs() > 1.0) return; //no firing solution
         firingAngle += Math.asin(sinCorr);
       }
@@ -46,28 +46,40 @@ class Weapon<T>{
   }
   
   void fireIfReady(){
-    if(!firingAngle.isNaN && (host.theta - firingAngle).abs()<.2)
+    if(!firingAngle.isNaN && (host.theta - firingAngle).abs()<.1)
       fire();
   }
-  
+  //bool shot = false;
   void fire(){
-    Projectile proj = projectileType();
-    proj.movement.velocity.setValues(projectileSpeed, 0.0);
-    host.rotation.transform( proj.movement.velocity ).add(host.velocity);
-    proj.movement.position.setValues(host.actualBodyRadius+1.0, 0.0);
-    host.rotation.transform( proj.movement.position ).add(host.position);
+    //print("firing with error ${firingAngle-host.theta}");
+    Projectile proj = _projectileType();
+    proj.velocity.setValues(FIRING_SPEED, 0.0);
+    host.rotation.transform( proj.velocity ).add(host.velocity);
+    proj.position.setValues(host.actualBodyRadius+1.0, 0.0);
+    host.rotation.transform( proj.position ).add(host.position);
     GameManager.inst.map.addSprite(proj);
+    proj.arm();
+    //shot = true;
   }
   
   bool _fireAtWill = false;
   
   set fireAtWill(bool value){
-    _fireAtWill = value;
-    if(_fireAtWill){
+    if(value && !_fireAtWill){
+      print("firer created");
       fireer = new Timer.periodic(
-          new Duration(milliseconds: 100),(t) => fireIfReady());
-    }else
-      fireer.cancel();
+          new Duration(milliseconds: 500),(t) => fireIfReady());
+    }else if(!value && _fireAtWill){
+      print("firer $fireer will be canceled");
+      if(fireer!=null) fireer.cancel();
+    }
+    _fireAtWill = value;
+  }
+  
+  Builder get projectileType => _projectileType;
+  set projectileType(Builder value){
+    _projectileType = value;
+    projectileRange = FIRING_SPEED * value().LIFESPAN;
   }
   
   

@@ -64,11 +64,26 @@ class MapRect{
 
 ///can be added to the quadtree
 abstract class CollidableBody{
+  ///Setting [isCollidable] to false skips collision checking for [this].
   bool get isCollidable;
+  
+  /**Called when another [other] may be colliding with [this], 
+   * Put detailed collision checking here.
+   */
   void onApproach(CollidableBody other);
+  
+  /**Callback notification that a collision has been detected between [this]
+   * and [other]. Don't call onCollidedWith from this method.
+   */
+  void onCollidedWith(CollidableBody other);
+  
+  ///[MapRect] used for possible collisions
   MapRect get collisionProfile;
+  
+  ///Cartiesian position of [this]
   Vector2 get position;
   
+  ///Returns a filtered stream of events pertaining to [this].
   Stream<GameEvent> watchFor(String type);
   //String log;
 }
