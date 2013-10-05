@@ -1,9 +1,10 @@
 part of gamebase2d;
 typedef Projectile Builder();
 
-class Weapon<T>{
+class Weapon{
   double firingDelay;
   double projectileRange;
+  double projectileLifespan;
   Dude host;
   
   static const double FIRING_SPEED = 150.0; //px/s
@@ -14,28 +15,49 @@ class Weapon<T>{
     this.projectileType = projectileType;
   }
   
+  double firingAngle = 0.0;
+  Vector2 vectorToTarget;
+  Vector2 targetTravelDirection;
+  num targetRelSpeed;
+  num rangeToTarget;
+  num effectiveRange;
+  num prepareToFire(CollidableBody target){
+    vectorToTarget = target.position - host.position;
+    rangeToTarget = vectorToTarget.length;
+    effectiveRange = (host.velocity.dot(vectorToTarget) /
+        rangeToTarget+FIRING_SPEED)*projectileLifespan;
+    
+    targetTravelDirection = (target as InertialBody).velocity - host.velocity;
+    targetRelSpeed = 1.0/targetTravelDirection.normalizeLength();
+    
+    //no hope scenarios
+    if(effectiveRange < rangeToTarget) return 0.0;
+    num alignment = calcFiringSolution(target);
+    if(firingAngle.isNaN) return 0.0;
+    
+    return Math.pow(alignment,2.0);
+  }
+  
+  num get preferredRange => projectileRange*.6;
   bool isInRange(CollidableBody body){
     return (body.position - host.position).length < projectileRange;
   }
-  double firingAngle = 0.0;
-  double getFiringSolution(CollidableBody target){
-    Vector2 diff = target.position - host.position;
-    double dist = diff.length;
-    firingAngle = Math.atan2(diff.y, diff.x);
+  
+  double calcFiringSolution(CollidableBody target){
+    firingAngle = Math.atan2(vectorToTarget.y, vectorToTarget.x);
     
     if(target is InertialBody){
-      Vector2 relV = (target as InertialBody).velocity - host.velocity;
-      double relS = 1.0/relV.normalizeLength();
-      //print("relS $relS");
-      if(relS > .1){
+      if(targetRelSpeed > .1){
         //correct for relative speed
-        double sinCorr = relS/FIRING_SPEED * diff.cross(relV) / dist;
-        //if(sinCorr.abs() > 1.0) return; //no firing solution
+        double alignment = vectorToTarget.cross(targetTravelDirection) / rangeToTarget;
+        double sinCorr = targetRelSpeed/FIRING_SPEED * alignment;
+            //vectorToTarget.cross(targetTravelDirection) / rangeToTarget;
+        
         firingAngle += Math.asin(sinCorr);
+        return alignment;
       }
     }
-    //host.
-    return firingAngle;
+    return 1.0;
   }
   
   Vector2 getFiringPosition(CollidableBody target){
@@ -46,7 +68,7 @@ class Weapon<T>{
   }
   
   void fireIfReady(){
-    if(!firingAngle.isNaN && (host.theta - firingAngle).abs()<.1)
+    if(!firingAngle.isNaN && (host.theta - firingAngle).abs()<1.0)
       fire();
   }
   //bool shot = false;
@@ -80,6 +102,7 @@ class Weapon<T>{
   set projectileType(Builder value){
     _projectileType = value;
     projectileRange = FIRING_SPEED * value().LIFESPAN;
+    projectileLifespan = value().LIFESPAN;
   }
   
   

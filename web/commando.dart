@@ -50,13 +50,13 @@ class ShootyTest implements Level{
   
   Random rand = new Random();
   void onClick(MouseEvent e){
-    print("click $e");
+    print("click ${e.offset.x},${e.offset.y}");
     /*bots.first.autoPilot.controller.targetPosition = 
         new Vector2(e.offset.x.toDouble(),e.offset.y.toDouble());*/
     
     Disc disc = new Disc();
     disc.position.setValues(e.offset.x.toDouble(), e.offset.y.toDouble());
-    double vel = 80.0;//rand.nextDouble()*50+100.0;
+    double vel = 50.0;//rand.nextDouble()*50+100.0;
     double th = 3.2;//rand.nextDouble()*6;
     disc.radius = 30.0;
     disc.color = "blue";

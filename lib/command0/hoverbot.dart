@@ -65,25 +65,25 @@ class Hoverbot extends Dude{
  
   void draw(CanvasRenderingContext2D context, [Matrix3 transform]){
     
-    if(autoPilot.bodyAlignedThrust.x < 0)
+    if(autoPilot.bodyAlignedThrust.x < 1.0)
       drawFlame(
           thrusters["x-"],
-          -autoPilot.bodyAlignedThrust.x/20000.0,
+          -.2,
           context,transform);
     else
       drawFlame(
           thrusters["x+"],
           autoPilot.bodyAlignedThrust.x/80000.0,
           context,transform);
-    if(autoPilot.bodyAlignedThrust.y < 0)
+    if(autoPilot.bodyAlignedThrust.y < 1.0)
       drawFlame(
           thrusters["y-"],
-          -autoPilot.bodyAlignedThrust.y/20000.0,
+          -.2,
           context,transform);
     else
       drawFlame(
           thrusters["y+"],
-          autoPilot.bodyAlignedThrust.x/80000.0,
+          .2,
           context,transform);
     context.fillStyle = mainColor;
     super.draw(context);

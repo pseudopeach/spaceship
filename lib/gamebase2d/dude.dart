@@ -12,6 +12,7 @@ class Dude extends VectorSprite implements CollidableBody, InertialBody{
   InertialBody _movement;
   bool isCollidable = true;
   bool isBouncy = false;
+  bool isTakingShot = false;
   num _inertia;
   
   //CollidableBody targetBody;
@@ -50,19 +51,31 @@ class Dude extends VectorSprite implements CollidableBody, InertialBody{
     if(_task is CollidableBody){
       //seek and destroy body
       CollidableBody targetBody = _task;
-      if(weapon.isInRange(targetBody)){
-        autoPilot.setMission(theta: weapon.getFiringSolution(targetBody));
-        weapon.fireAtWill = true;
-      }else{
-        weapon.fireAtWill = false;
-        autoPilot.setMission(
-            position:weapon.getFiringPosition(targetBody),
-            velocity:(targetBody as InertialBody).velocity
-        );
-      } 
+      
+      //check how good a shot we have
+      num goodness = weapon.prepareToFire(targetBody);
+      
+      //switch modes according to shot goodness with a "deadband"
+      if(goodness < .5){print("follow mode");
+        isTakingShot = false;
+      }else if(goodness > .75){print("shot mode");
+        isTakingShot = true;}
+      
+      //be shooting unless it's hopeless
+      weapon.fireAtWill = goodness > .10;
+    
+      //if in shooting mode, lock theta to firing angle
+      autoPilot.isLockedOnTarget = isTakingShot;
+      if(isTakingShot)
+        autoPilot.setMission(theta: weapon.firingAngle);
+      
+      //continue to manuver no matter what
+      autoPilot.seekFiringPosition(targetBody, weapon);
+  
     }else if(_task is Vector2){
       //seek position
-      Vector2 targetPosition = _task;
+      Vector2 targetPos = _task;
+      autoPilot.setMission(position: targetPos, velocity:new Vector2.zero());
     }
   }
   

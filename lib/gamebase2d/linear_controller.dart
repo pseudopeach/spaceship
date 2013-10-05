@@ -40,16 +40,15 @@ class LinearController{
       
       _usingCruiseMode = posError.length2 > _stoppingDistance2;
       
-      if(_usingCruiseMode){
-        targetVelocity = posError.scaled(-cruisingSpeed/posError.length);
+      if(false && _usingCruiseMode){
+        Vector2 cruiseVel = posError.scaled(-cruisingSpeed/posError.length);
         feedbackState.setZero();
-        feedbackState.setColumn(1, plant.velocity-targetVelocity);
+        feedbackState.setColumn(1, plant.velocity-cruiseVel);
       }else
-        feedbackState.setColumns(plant.position-targetPosition, plant.velocity);
+        feedbackState.setColumns(posError, plant.velocity-targetVelocity);
     
       //calc thrust inputs
       des = feedbackState * kGains;
-      //print(feedbackState);
       //print("desired force $des, cruise:$_usingCruiseMode");
       Vector2 thrust = getThrusterOutput(des);
       out.xy = plant.rotation * thrust;
