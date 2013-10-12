@@ -58,7 +58,7 @@ class Dude extends VectorSprite implements CollidableBody, InertialBody{
       //switch modes according to shot goodness with a "deadband"
       if(goodness < .5){print("follow mode");
         isTakingShot = false;
-      }else if(goodness > .75){print("shot mode");
+      }else if(goodness > .75){
         isTakingShot = true;}
       
       //be shooting unless it's hopeless

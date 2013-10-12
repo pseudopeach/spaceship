@@ -68,7 +68,8 @@ class Weapon{
   }
   
   void fireIfReady(){
-    if(!firingAngle.isNaN && (host.theta - firingAngle).abs()<1.0)
+    print("fire e:${thetaDiff(host.theta,firingAngle)}");
+    if(!firingAngle.isNaN && thetaDiff(host.theta,firingAngle).abs()<1.0)
       fire();
   }
   //bool shot = false;

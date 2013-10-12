@@ -50,7 +50,7 @@ class Autopilot{
     controller.targetPosition = missionPos;
     controller.targetVelocity = missionV;
     num dot = (missionPos-target.position).cross(missionV);
-    //print("cruise:${controller._usingCruiseMode} p:$missionPos, v:$missionV dot:$dot");
+    //print("eint:${controller.errorInt} ");
   }
   
   void cancelMission(){
@@ -61,7 +61,7 @@ class Autopilot{
     
   }
   
-  Vector3 getCommand() => controller.getCommand();
+  Vector3 getCommand(num dt) => controller.getCommand(dt);
   Vector2 get bodyAlignedThrust => controller.bodyAlignedThrust;
   
 }

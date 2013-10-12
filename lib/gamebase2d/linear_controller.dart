@@ -1,11 +1,12 @@
 part of gamebase2d;
 class LinearController{
-  final num toopi = Math.PI*2.0;
+  //final num toopi = Math.PI*2.0;
   
   num thrustForwardMax = 80000.0;
   num thrustBackwardMax = 20000.0;
   num thrustLateralMax = 20000.0;
-  num thrustMomentMax = 20000.0;
+  num thrustMomentMax = 120000.0;
+  final num thetaIntegralGain = 0.8;
   
   ///align the ship to the desired control force, overriding [targetTheta]
   bool _usingDirectionOverride = false;
@@ -13,6 +14,8 @@ class LinearController{
   
   num _dampingRatio = 0.7071;
   num _natFreq = 0.1;
+  Vector3 _thetaPID;
+  num _overallThetaGain = 8.0;
   num _cruisingSpeed = 150.0;
   num _stoppingDistance2;
   
@@ -28,7 +31,7 @@ class LinearController{
   LinearController(this.plant);
   
   ///determines control command to be applied to the plant
-  Vector3 getCommand(){
+  Vector3 getCommand(num dt){
     Vector3 out = new Vector3.zero();
     Vector2 des;
     
@@ -65,7 +68,7 @@ class LinearController{
     targetTheta = _usingDirectionOverride && des!=null ?
         Math.atan2(des.y, des.x) : targetTheta;
     
-    out.z = getMomentCommand();
+    out.z = getMomentCommand(dt);
      
     return out;
   }
@@ -83,20 +86,44 @@ class LinearController{
     return bat;
   }
   
-  num getMomentCommand(){
+  List<num> thErrors = [0.0,0.0,0.0];
+  List<num> momentsPast = [0.0,0.0,0.0];
+  num overallThetaGain = 5.0;
+  num getMomentCommand(num dt){
     if(targetTheta == null) return 0.0;
     
-    num error = (plant.theta - targetTheta)%toopi;
-    if(error < -Math.PI) error += toopi;
-    else if(error > Math.PI) error -= toopi;
+    num error = thetaDiff(targetTheta, plant.theta);
+    /*errorInt += error - errorInt*.01;
+    if(errorInt > 6.0) errorInt = 6.0;
+    if(errorInt < -6.0) errorInt = -6.0;*/
+    thErrors.removeLast();
+    thErrors.insert(0, error);
     
-    num moment = -plant.inertia*(
+    /*num moment = -plant.inertia*(
         4.0*_dampingRatio*_natFreq*plant.omega +
-        4.0*_natFreq*_natFreq*error
-    );
+        4.0*_natFreq*_natFreq*error +
+        thetaIntegralGain*errorInt
+    );*/
     
-    /*if(moment.abs() > thrustMomentMax)
-      moment = thrustMomentMax * (moment>0?1.0:-1.0);*/
+    //PID control
+    //transfer function
+    //K*(s^2+kp*s+ki)/s
+    //descritized
+    //K*(4-2*kp*dt+ki*dt2)*z.2 + (-8+2*ki*dt2)*z.1 + (4+2*kp*dt+ki*dt2)*z.0)/(2 dt (1-z.2))
+    /*
+    num kp = 3.0;
+    num ki = 4.0;
+    num dt2 = dt*dt;
+    num moment = overallThetaGain*plant.inertia/(2*dt)*(
+        (4+2*kp*dt+ki*dt2)*thErrors[0] + 
+        (-8+2*ki*dt2)*thErrors[1] + 
+        (4-2*kp*dt+ki*dt2)*thErrors[2]
+    );
+    moment += momentsPast[2];    
+    momentsPast.removeLast();
+    momentsPast.insert(0, moment);*/
+    if(moment.abs() > thrustMomentMax)
+      moment = thrustMomentMax * (moment>0?1.0:-1.0);
     //print("error:$error moment:$moment");
     return moment;
   }
@@ -126,7 +153,12 @@ class LinearController{
     _stoppingDistance2 = Math.pow(
         1.1*(kGains.g*cruisingSpeed-thrustForwardMax)/kGains.r,
     2.0);
-    print("Stopping dist: ${Math.sqrt(_stoppingDistance2)}");
+    _thetaPID = new Vector3(
+        1.0,
+        2.0*0.75*_natFreq,
+        _natFreq*_natFreq
+    );
+    _thetaPID.scale(_overallThetaGain);
   }
   
 }
