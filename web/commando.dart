@@ -44,24 +44,24 @@ class ShootyTest implements Level{
   void startLevel(){
       //set event listener
       GameManager.canvas.onClick.listen((e)=>onClick(e));
-      GameManager.mapEvents.listen((e)=>targets.remove(e.body) );
-      
+      //GameManager.mapEvents.listen((e)=>targets.remove(e.body) );  
   }
   
   Random rand = new Random();
   void onClick(MouseEvent e){
     print("click ${e.offset.x},${e.offset.y}");
-    /*bots.first.autoPilot.controller.targetPosition = 
-        new Vector2(e.offset.x.toDouble(),e.offset.y.toDouble());*/
+    //bots.first.autoPilot.controller.targetTheta = bots.first.theta+3.0;
+        //new Vector2(e.offset.x.toDouble(),e.offset.y.toDouble());
     
     Disc disc = new Disc();
     disc.position.setValues(e.offset.x.toDouble(), e.offset.y.toDouble());
-    double vel = 50.0;//rand.nextDouble()*50+100.0;
-    double th = 3.2;//rand.nextDouble()*6;
+    double vel = rand.nextDouble()*50+50.0;
+    double th = rand.nextDouble()*6;
     disc.radius = 30.0;
     disc.color = "blue";
     disc.isBouncy = true;
     disc.velocity.setValues(vel*cos(th),vel*sin(th));
+    disc.watchFor(GameEvent.BODY_REMOVED).listen((e) => targets.remove(e.body) );
     targets.add(disc);
     map.addSprite(disc);
     
