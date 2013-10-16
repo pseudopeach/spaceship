@@ -15,11 +15,12 @@ class Autopilot{
   Vector2 missionPos = new Vector2.zero();
   Vector2 missionV = new Vector2.zero();
   num missionTheta;
-  bool setMission({Vector2 position, num theta, Vector2 velocity}){
+  bool setMission({Vector2 position, num theta, Vector2 velocity, num omega:0.0}){
     controller._usingDirectionOverride = !isLockedOnTarget;
     if(theta != null && !theta.isNaN){
       missionTheta = theta;
       controller.targetTheta = theta;
+      controller.targetOmega = omega;
     }
     if(position != null){
       //print("target position set: $position");
@@ -39,7 +40,7 @@ class Autopilot{
     missionPos.negate().normalize();
     missionV.setValues(-missionPos.y,missionPos.x);
     num vCir = Math.sqrt(controller.thrustForwardMax/2 * weapon.preferredRange / host.mass);
-    if(weapon.targetTravelDirection.cross(weapon.vectorToTarget) > 0.0)
+    if(weapon.rangeAlignedVel.y < 0.0)
       vCir *= -1.0;
     
     missionV.scale(vCir);

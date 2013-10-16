@@ -22,3 +22,11 @@ part 'gamebase2d/dude.dart';
 part 'gamebase2d/weapon.dart';
 part 'gamebase2d/linear_controller.dart';
 part 'gamebase2d/autopilot.dart';
+
+final double TWO_PI = 2*Math.PI;
+num thetaDiff(th1, th2){
+  num diff = (th1 - th2)%TWO_PI;
+  if(diff < -Math.PI) diff += TWO_PI;
+  else if(diff > Math.PI) diff -= TWO_PI;
+  return diff;
+}

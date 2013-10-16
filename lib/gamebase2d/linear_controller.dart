@@ -5,7 +5,7 @@ class LinearController{
   num thrustForwardMax = 80000.0;
   num thrustBackwardMax = 20000.0;
   num thrustLateralMax = 20000.0;
-  num thrustMomentMax = 120000.0;
+  num thrustMomentMax = 160000.0;
   final num thetaIntegralGain = 0.8;
   
   ///align the ship to the desired control force, overriding [targetTheta]
@@ -15,13 +15,14 @@ class LinearController{
   num _dampingRatio = 0.7071;
   num _natFreq = 0.1;
   Vector3 _thetaPID;
-  num _overallThetaGain = 8.0;
+  num _overallThetaGain = 12.0;
   num _cruisingSpeed = 150.0;
   num _stoppingDistance2;
   
   Vector2 targetPosition;
   Vector2 targetVelocity;
   num targetTheta;
+  num targetOmega;
   
   Vector2 kGains = new Vector2.zero();
   Matrix2 feedbackState = new Matrix2.zero();
@@ -86,42 +87,25 @@ class LinearController{
     return bat;
   }
   
-  List<num> thErrors = [0.0,0.0,0.0];
-  List<num> momentsPast = [0.0,0.0,0.0];
-  num overallThetaGain = 5.0;
+  //List<num> thErrors = [0.0,0.0,0.0];
+  //List<num> momentsPast = [0.0,0.0,0.0];
+  //num overallThetaGain = 5.0;
+  num _intThetaError = 0.0;
   num getMomentCommand(num dt){
     if(targetTheta == null) return 0.0;
     
     num error = thetaDiff(targetTheta, plant.theta);
-    /*errorInt += error - errorInt*.01;
-    if(errorInt > 6.0) errorInt = 6.0;
-    if(errorInt < -6.0) errorInt = -6.0;*/
-    thErrors.removeLast();
-    thErrors.insert(0, error);
-    
-    /*num moment = -plant.inertia*(
-        4.0*_dampingRatio*_natFreq*plant.omega +
-        4.0*_natFreq*_natFreq*error +
-        thetaIntegralGain*errorInt
-    );*/
+    num errorD = (targetOmega != null ? targetOmega : 0.0) - plant.omega;
+    _intThetaError += error * dt - .15*_intThetaError;
+    //print("integrated:${_intThetaError} error:$error");
     
     //PID control
     //transfer function
     //K*(s^2+kp*s+ki)/s
-    //descritized
-    //K*(4-2*kp*dt+ki*dt2)*z.2 + (-8+2*ki*dt2)*z.1 + (4+2*kp*dt+ki*dt2)*z.0)/(2 dt (1-z.2))
-    /*
-    num kp = 3.0;
-    num ki = 4.0;
-    num dt2 = dt*dt;
-    num moment = overallThetaGain*plant.inertia/(2*dt)*(
-        (4+2*kp*dt+ki*dt2)*thErrors[0] + 
-        (-8+2*ki*dt2)*thErrors[1] + 
-        (4-2*kp*dt+ki*dt2)*thErrors[2]
+    num moment = _thetaPID.dot(
+        new Vector3(error, _intThetaError, errorD)
     );
-    moment += momentsPast[2];    
-    momentsPast.removeLast();
-    momentsPast.insert(0, moment);*/
+    
     if(moment.abs() > thrustMomentMax)
       moment = thrustMomentMax * (moment>0?1.0:-1.0);
     //print("error:$error moment:$moment");
@@ -153,12 +137,8 @@ class LinearController{
     _stoppingDistance2 = Math.pow(
         1.1*(kGains.g*cruisingSpeed-thrustForwardMax)/kGains.r,
     2.0);
-    _thetaPID = new Vector3(
-        1.0,
-        2.0*0.75*_natFreq,
-        _natFreq*_natFreq
-    );
-    _thetaPID.scale(_overallThetaGain);
+    _thetaPID = new Vector3(4.0,1.0,1.0);
+    _thetaPID.scale(_overallThetaGain * plant.inertia);
   }
   
 }

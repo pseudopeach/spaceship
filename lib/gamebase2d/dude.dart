@@ -13,7 +13,7 @@ class Dude extends VectorSprite implements CollidableBody, InertialBody{
   bool isCollidable = true;
   bool isBouncy = false;
   bool isTakingShot = false;
-  num _inertia;
+  num _inertia = 1.0;
   
   //CollidableBody targetBody;
   
@@ -54,9 +54,8 @@ class Dude extends VectorSprite implements CollidableBody, InertialBody{
       
       //check how good a shot we have
       num goodness = weapon.prepareToFire(targetBody);
-      
       //switch modes according to shot goodness with a "deadband"
-      if(goodness < .5){print("follow mode");
+      if(goodness < .5){print("follow mode goodness:$goodness");
         isTakingShot = false;
       }else if(goodness > .75){
         isTakingShot = true;}
@@ -67,7 +66,7 @@ class Dude extends VectorSprite implements CollidableBody, InertialBody{
       //if in shooting mode, lock theta to firing angle
       autoPilot.isLockedOnTarget = isTakingShot;
       if(isTakingShot)
-        autoPilot.setMission(theta: weapon.firingAngle);
+        autoPilot.setMission(theta: weapon.firingAngle, omega:weapon.firingOmega);
       
       //continue to manuver no matter what
       autoPilot.seekFiringPosition(targetBody, weapon);

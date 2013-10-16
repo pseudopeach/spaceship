@@ -8,7 +8,7 @@ class Hoverbot extends Dude{
   Hoverbot(){
     mass = 1000.0;
     omega = 0.0;
-    inertia = 10000;
+    inertia = 10000.0;
 
     points = [
       new Vector2(25.0,0.0), 
@@ -55,11 +55,11 @@ class Hoverbot extends Dude{
   double firingAngle;
   
   void updateBeforeDraw(num dt){
-    Vector3 controlInput = autoPilot.getCommand();
+    Vector3 controlInput = autoPilot.getCommand(dt);
     force += controlInput.xy;
     //print(controlInput);
     //print("thrust ${controlInput.xy}");
-    omega += autoPilot.getCommand().z/inertia*dt;
+    omega += controlInput.z/inertia*dt;
     super.updateBeforeDraw(dt);
   }
  

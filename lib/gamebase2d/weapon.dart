@@ -7,7 +7,7 @@ class Weapon{
   double projectileLifespan;
   Dude host;
   
-  static const double FIRING_SPEED = 150.0; //px/s
+  static const double FIRING_SPEED = 250.0; //px/s
   Builder _projectileType;
   Timer fireer;
   
@@ -16,26 +16,39 @@ class Weapon{
   }
   
   double firingAngle = 0.0;
+  double firingOmega = 0.0;
   Vector2 vectorToTarget;
-  Vector2 targetTravelDirection;
-  num targetRelSpeed;
+  //Vector2 targetTravelDirection;
+  Vector2 targetRelVel;
+  Vector2 rangeAlignedVel;
+  //num targetRelSpeed;
   num rangeToTarget;
   num effectiveRange;
+  num rSpeed;
+  Matrix2 transform = new Matrix2.zero();
   num prepareToFire(CollidableBody target){
     vectorToTarget = target.position - host.position;
-    rangeToTarget = vectorToTarget.length;
-    effectiveRange = (host.velocity.dot(vectorToTarget) /
-        rangeToTarget+FIRING_SPEED)*projectileLifespan;
     
-    targetTravelDirection = (target as InertialBody).velocity - host.velocity;
-    targetRelSpeed = 1.0/targetTravelDirection.normalizeLength();
+    Vector2 tDir = vectorToTarget.clone();
+    rangeToTarget = 1.0/tDir.normalizeLength();
+    
+    targetRelVel = (target as InertialBody).velocity - host.velocity;
+    rSpeed = targetRelVel.length;
+    
+    transform.setRow(0, tDir);
+    transform.setRow(1,new Vector2(-tDir.y, tDir.x));
+    //print("x,y:$tDir, tr:$transform");
+    
+    rangeAlignedVel = transform * targetRelVel;
+    
+    effectiveRange = (FIRING_SPEED-rangeAlignedVel.x)*projectileLifespan;
     
     //no hope scenarios
     if(effectiveRange < rangeToTarget) return 0.0;
     num alignment = calcFiringSolution(target);
     if(firingAngle.isNaN) return 0.0;
     
-    return Math.pow(alignment,2.0);
+    return alignment.abs();
   }
   
   num get preferredRange => projectileRange*.6;
@@ -47,17 +60,19 @@ class Weapon{
     firingAngle = Math.atan2(vectorToTarget.y, vectorToTarget.x);
     
     if(target is InertialBody){
-      if(targetRelSpeed > .1){
+      if(rangeAlignedVel.y.abs() > .1){
         //correct for relative speed
-        double alignment = vectorToTarget.cross(targetTravelDirection) / rangeToTarget;
-        double sinCorr = targetRelSpeed/FIRING_SPEED * alignment;
-            //vectorToTarget.cross(targetTravelDirection) / rangeToTarget;
+        //alg = sin(ang(relVel, range))
+        double alignment = rangeAlignedVel.y / rSpeed;
+        double sinCorr = rSpeed / FIRING_SPEED * alignment;
         
         firingAngle += Math.asin(sinCorr);
+        firingOmega = rangeAlignedVel.y / rangeToTarget;
+        //print("firingOmega:$firingOmega");
         return alignment;
       }
     }
-    return 1.0;
+    return 1.0; //returns 1
   }
   
   Vector2 getFiringPosition(CollidableBody target){
