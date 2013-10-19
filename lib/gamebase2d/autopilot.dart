@@ -2,6 +2,8 @@ part of gamebase2d;
 
 class Autopilot{
   
+  num collisionWarningHorizon = 2.0;
+  
   Dude host;
   LinearController controller;
   bool isLockedOnTarget = false;
@@ -58,8 +60,24 @@ class Autopilot{
     
   }
   
+  bool _isAvoidingCollision = false;
   void checkCollisionForecast(CollidableBody other){
+    Vector2 diff = host.position - other.position;
+    Vector2 relVelUnit = host.velocity.clone().negate();
+    if(other is InertialBody)
+      relVelUnit.sub((other as InertialBody).velocity);   
     
+    if(diff.dot(relVelUnit) > 0.0){
+      //objects are closing distance
+      num speed = 1.0/relVelUnit.normalizeLength();
+      num minDist = diff.cross(relVelUnit)/speed;
+      
+      
+      if(minDist < host.actualBodyRadius && diff.length/speed < collisionWarningHorizon){
+        //objects will pass very close and that will happen soon
+        _isAvoidingCollision = false;
+      }
+    }
   }
   
   Vector3 getCommand(num dt) => controller.getCommand(dt);
